@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Beyond Bloom's: What Fink's Taxonomy Means for Computing Courses</title>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400;1,600&family=Source+Sans+3:wght@300;400;500;600&family=Source+Code+Pro:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #1c1917;
+    --body: #44403c;
+    --muted: #78716c;
+    --rule: #e7e5e4;
+    --bg: #fffdf9;
+    --warm: #faf7f2;
+    --accent: #b45309;
+    --accent-light: #fef3c7;
+    --pull: #f5f0e8;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Source Sans 3', sans-serif;
+    background: var(--bg);
+    color: var(--body);
+    font-size: 18px;
+    line-height: 1.8;
+  }
+
+  /* Top bar */
+  .top-bar {
+    border-bottom: 1px solid var(--rule);
+    padding: 1rem 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: white;
+  }
+  .top-bar .site-name {
+    font-family: 'Lora', serif;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--ink);
+  }
+  .top-bar .series-tag {
+    font-size: 0.75rem;
+    font-family: 'Source Code Pro', monospace;
+    color: var(--muted);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  /* Before You Read Banner */
+  .byr-banner {
+    background: #eff6ff;
+    border-bottom: 2px solid #bfdbfe;
+    padding: 1.1rem 2rem;
+  }
+  .byr-inner {
+    max-width: 720px;
+    margin: 0 auto;
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  .byr-icon {
+    font-size: 1.3rem;
+    flex-shrink: 0;
+    margin-top: 0.1rem;
+  }
+  .byr-text {
+    font-size: 0.88rem;
+    color: #1e3a5f;
+    line-height: 1.6;
+  }
+  .byr-text strong {
+    color: #1e3a5f;
+    font-weight: 600;
+  }
+
+  /* Collapsible primer */
+  .primer-section {
+    background: #f0f7ff;
+    border-bottom: 1px solid #bfdbfe;
+  }
+  .primer-toggle {
+    width: 100%;
+    background: none;
+    border: none;
+    padding: 1rem 2rem;
+    text-align: left;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #1d4ed8;
+    max-width: 720px;
+    margin: 0 auto;
+  }
+  .primer-toggle:hover { color: #1e3a5f; }
+  .primer-toggle .arrow {
+    font-size: 0.8rem;
+    transition: transform 0.2s;
+    flex-shrink: 0;
+  }
+  .primer-toggle.open .arrow { transform: rotate(180deg); }
+
+  .primer-body {
+    display: none;
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 0 2rem 2rem;
+  }
+  .primer-body.open { display: block; }
+
+  /* Primer subsections */
+  .primer-subsection {
+    margin-bottom: 2rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid #bfdbfe;
+  }
+  .primer-subsection:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+
+  .primer-subsection h4 {
+    font-family: 'Source Code Pro', monospace;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: #1d4ed8;
+    margin-bottom: 0.6rem;
+  }
+  .primer-subsection p {
+    font-size: 0.9rem;
+    color: #1e3a5f;
+    margin-bottom: 0.75rem;
+    line-height: 1.7;
+  }
+  .primer-subsection p:last-child { margin-bottom: 0; }
+
+  /* Bloom's ladder visual */
+  .bloom-ladder {
+    margin: 1rem 0 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+  .bloom-rung {
+    display: grid;
+    grid-template-columns: 90px 1fr 1fr;
+    gap: 0.5rem;
+    align-items: center;
+    padding: 0.6rem 0.85rem;
+    border-radius: 7px;
+    font-size: 0.82rem;
+  }
+  .bloom-rung-level {
+    font-family: 'Source Code Pro', monospace;
+    font-weight: 500;
+    font-size: 0.78rem;
+  }
+  .bloom-rung-def { color: #374151; line-height: 1.4; }
+  .bloom-rung-verbs {
+    font-family: 'Source Code Pro', monospace;
+    font-size: 0.72rem;
+    color: #374151;
+    opacity: 0.8;
+  }
+  .bloom-ladder-header {
+    display: grid;
+    grid-template-columns: 90px 1fr 1fr;
+    gap: 0.5rem;
+    padding: 0.3rem 0.85rem;
+    font-family: 'Source Code Pro', monospace;
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #6b7280;
+    margin-bottom: 0.15rem;
+  }
+  .bloom-order-label {
+    font-size: 0.72rem;
+    color: #6b7280;
+    font-family: 'Source Code Pro', monospace;
+    margin-top: 0.5rem;
+    text-align: right;
+    font-style: italic;
+  }
+
+  /* AI integrity box in primer */
+  .ai-context-box {
+    background: #fefce8;
+    border: 1px solid #fde68a;
+    border-radius: 8px;
+    padding: 1rem 1.25rem;
+    margin-top: 0.5rem;
+  }
+  .ai-context-box p {
+    color: #713f12 !important;
+    font-size: 0.88rem !important;
+    margin-bottom: 0.5rem !important;
+  }
+  .ai-context-box p:last-child { margin-bottom: 0 !important; }
+
+  /* Learning outcome example */
+  .lo-example {
+    background: white;
+    border: 1.5px solid #bfdbfe;
+    border-radius: 8px;
+    padding: 1rem 1.25rem;
+    margin-top: 0.5rem;
+    font-size: 0.85rem;
+  }
+  .lo-example .lo-label {
+    font-family: 'Source Code Pro', monospace;
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #6b7280;
+    margin-bottom: 0.4rem;
+  }
+  .lo-example .lo-weak { color: #991b1b; margin-bottom: 0.5rem; }
+  .lo-example .lo-strong { color: #166534; }
+  .lo-verb {
+    display: inline-block;
+    background: #dcfce7;
+    color: #14532d;
+    font-family: 'Source Code Pro', monospace;
+    font-size: 0.75rem;
+    padding: 0.1rem 0.4rem;
+    border-radius: 4px;
+    font-weight: 500;
+  }
+  .lo-verb.weak { background: #fee2e2; color: #991b1b; }
+
+  /* Hero */
+  .hero {
+    background: var(--ink);
+    color: #faf8f3;
+    padding: 5rem 2rem 4rem;
+    text-align: center;
+  }
+  .hero-series {
+    font-family: 'Source Code Pro', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: #d97706;
+    margin-bottom: 1.5rem;
+  }
+  .hero h1 {
+    font-family: 'Lora', serif;
+    font-size: clamp(2rem, 5vw, 3.4rem);
+    font-weight: 400;
+    line-height: 1.15;
+    margin-bottom: 1.25rem;
+    max-width: 780px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .hero h1 em { font-style: italic; color: #fbbf24; }
+  .hero .subtitle {
+    font-size: 1.05rem;
+    font-weight: 300;
+    color: rgba(250,248,243,0.65);
+    max-width: 520px;
+    margin: 0 auto 2rem;
+    line-height: 1.7;
+  }
+  .hero-meta {
+    font-size: 0.8rem;
+    color: rgba(250,248,243,0.45);
+    font-family: 'Source Code Pro', monospace;
+    letter-spacing: 0.05em;
+  }
+
+  /* Article */
+  article {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 3.5rem 2rem 5rem;
+  }
+
+  p { margin-bottom: 1.5rem; color: var(--body); }
+
+  h2 {
+    font-family: 'Lora', serif;
+    font-size: 1.7rem;
+    font-weight: 600;
+    color: var(--ink);
+    line-height: 1.25;
+    margin-top: 3rem;
+    margin-bottom: 1rem;
+  }
+  h3 {
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: var(--ink);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-top: 2.5rem;
+    margin-bottom: 0.75rem;
+  }
+  strong { color: var(--ink); font-weight: 600; }
+
+  .pull-quote {
+    background: var(--pull);
+    border-left: 4px solid var(--accent);
+    padding: 1.5rem 2rem;
+    margin: 2.5rem 0;
+    border-radius: 0 8px 8px 0;
+  }
+  .pull-quote p {
+    font-family: 'Lora', serif;
+    font-size: 1.2rem;
+    font-style: italic;
+    color: var(--ink);
+    line-height: 1.6;
+    margin: 0;
+  }
+
+  .callout {
+    background: var(--accent-light);
+    border: 1px solid #fcd34d;
+    border-radius: 10px;
+    padding: 1.5rem 1.75rem;
+    margin: 2rem 0;
+  }
+  .callout-label {
+    font-family: 'Source Code Pro', monospace;
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--accent);
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+  }
+  .callout p { font-size: 0.95rem; color: #78350f; margin: 0; line-height: 1.7; }
+
+  .dim-table { width: 100%; border-collapse: collapse; margin: 2rem 0; font-size: 0.9rem; }
+  .dim-table thead th {
+    font-family: 'Source Code Pro', monospace;
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    padding: 0.5rem 0.75rem;
+    border-bottom: 2px solid var(--rule);
+    text-align: left;
+  }
+  .dim-table tbody tr { border-bottom: 1px solid var(--rule); }
+  .dim-table tbody tr:last-child { border-bottom: none; }
+  .dim-table tbody td { padding: 0.85rem 0.75rem; vertical-align: top; line-height: 1.5; }
+  .dim-badge {
+    display: inline-block;
+    font-family: 'Source Code Pro', monospace;
+    font-size: 0.68rem;
+    font-weight: 500;
+    padding: 0.2rem 0.45rem;
+    border-radius: 4px;
+  }
+  .dim-name { font-weight: 600; color: var(--ink); }
+
+  .example-box {
+    background: var(--warm);
+    border: 1.5px solid var(--rule);
+    border-radius: 10px;
+    padding: 1.5rem 1.75rem;
+    margin: 2rem 0;
+  }
+  .example-box-label {
+    font-family: 'Source Code Pro', monospace;
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+    margin-bottom: 0.75rem;
+  }
+  .example-box .before {
+    background: #fee2e2;
+    border-radius: 6px;
+    padding: 0.85rem 1rem;
+    font-size: 0.9rem;
+    color: #7f1d1d;
+    margin-bottom: 0.75rem;
+    line-height: 1.6;
+  }
+  .example-box .after {
+    background: #dcfce7;
+    border-radius: 6px;
+    padding: 0.85rem 1rem;
+    font-size: 0.9rem;
+    color: #14532d;
+    line-height: 1.6;
+  }
+  .label-sm {
+    font-size: 0.7rem;
+    font-family: 'Source Code Pro', monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 0.3rem;
+    opacity: 0.7;
+  }
+  .dim-tags { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-top: 0.5rem; }
+  .dim-tag {
+    font-family: 'Source Code Pro', monospace;
+    font-size: 0.65rem;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    font-weight: 500;
+  }
+
+  .section-rule { border: none; border-top: 1px solid var(--rule); margin: 3rem 0; }
+
+  .next-post {
+    background: var(--ink);
+    color: #faf8f3;
+    border-radius: 12px;
+    padding: 2rem;
+    margin-top: 3.5rem;
+    text-align: center;
+  }
+  .next-post .next-label {
+    font-family: 'Source Code Pro', monospace;
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: #d97706;
+    margin-bottom: 0.75rem;
+  }
+  .next-post p { color: rgba(250,248,243,0.7); font-size: 0.95rem; margin: 0; }
+  .next-post strong { color: #fbbf24; }
+
+  .styled-list { padding-left: 0; list-style: none; margin-bottom: 1.5rem; }
+  .styled-list li { position: relative; padding-left: 1.5rem; margin-bottom: 0.6rem; line-height: 1.7; }
+  .styled-list li::before { content: '→'; position: absolute; left: 0; color: var(--accent); font-weight: 600; }
+
+  .audit-box { border: 2px solid var(--ink); border-radius: 10px; padding: 1.75rem; margin: 2.5rem 0; }
+  .audit-box h3 { margin-top: 0; font-size: 1rem; color: var(--ink); }
+  .audit-box p { margin-bottom: 0; font-size: 0.95rem; }
+
+  /* Site nav */
+  .site-nav {
+    background: white;
+    border-bottom: 1px solid var(--rule);
+    padding: 0 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 56px;
+    position: sticky;
+    top: 0;
+    z-index: 200;
+    box-shadow: 0 1px 6px rgba(26,26,46,0.05);
+  }
+  .site-nav-brand {
+    font-family: 'Lora', serif;
+    font-size: 1rem;
+    color: var(--ink);
+    text-decoration: none;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+  .site-nav-brand span { color: #d97706; }
+  .site-nav-links {
+    display: flex;
+    gap: 0.25rem;
+    align-items: center;
+  }
+  .site-nav-link {
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: var(--muted);
+    text-decoration: none;
+    padding: 0.4rem 0.85rem;
+    border-radius: 6px;
+    transition: all 0.15s;
+    border: 1.5px solid transparent;
+  }
+  .site-nav-link:hover { color: var(--ink); background: var(--warm); }
+  .site-nav-link.active {
+    color: var(--ink);
+    border-color: var(--rule);
+    background: var(--warm);
+  }
+  @media (max-width: 480px) {
+    .site-nav-brand-text { display: none; }
+    .site-nav { padding: 0 1rem; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Top bar -->
+<nav class="site-nav">
+  <a href="index.html" class="site-nav-brand">Computing Verb <span>Atlas</span></a>
+  <div class="site-nav-links">
+    <a href="index.html" class="site-nav-link">🔍 Verb Finder</a>
+    <a href="beyond-blooms-finks-taxonomy.html" class="site-nav-link active">📝 Blog: Beyond Bloom's</a>
+  </div>
+</nav>
+
+<!-- Before You Read Banner -->
+<div class="byr-banner">
+  <div class="byr-inner">
+    <div class="byr-icon">📖</div>
+    <div class="byr-text">
+      <strong>New to learning design?</strong> This post references a few foundational concepts — learning outcomes, Bloom's Taxonomy, and AI integrity in assessment. The primer below unpacks all three in plain language before you dive in. If you're already familiar, skip ahead to the article.
+      <br><button onclick="openPrimer()" style="margin-top:0.5rem;background:none;border:none;color:#1d4ed8;font-family:inherit;font-size:0.88rem;font-weight:600;cursor:pointer;padding:0;text-decoration:underline;">Open the primer ↓</button>
+    </div>
+  </div>
+</div>
+
+<!-- Collapsible Primer -->
+<div class="primer-section">
+  <div style="max-width:720px;margin:0 auto;">
+    <button class="primer-toggle" id="primer-toggle" onclick="togglePrimer()">
+      <span>📚 Before You Read: A Primer for First-Year Faculty</span>
+      <span class="arrow" id="primer-arrow">▼</span>
+    </button>
+  </div>
+  <div class="primer-body" id="primer-body">
+
+    <!-- 1: What is a learning outcome? -->
+    <div class="primer-subsection">
+      <h4>1 — What is a learning outcome, and why does the verb matter?</h4>
+      <p>A <strong>learning outcome</strong> is a statement that describes what students will be able to <em>do</em> by the end of a course, module, or assignment — not what you will teach, but what they will demonstrate. The distinction matters because outcomes drive how you design assessments.</p>
+      <p>The verb you choose does a lot of work. It signals the cognitive level you're targeting and shapes what kind of evidence you'll accept as proof of learning. A vague verb produces a vague assessment. A precise verb makes the expectation clear to both you and your students.</p>
+
+      <div class="lo-example">
+        <div class="lo-label">Compare these two outcomes for the same topic</div>
+        <div class="lo-weak">❌ <span class="lo-verb weak">Understand</span> recursion and how it works in programming.</div>
+        <div class="lo-strong">✅ <span class="lo-verb">Trace</span> the execution of a recursive function by hand, identifying the base case, recursive call, and return values at each stack frame.</div>
+        <div style="margin-top:0.75rem;font-size:0.8rem;color:#374151;line-height:1.6;">The second outcome tells students exactly what they'll do, tells you exactly what to assess, and points clearly toward the cognitive level — analyzing execution, not just recalling a definition.</div>
+      </div>
+
+      <p style="margin-top:1rem;">This is why taxonomies like Bloom's matter: they give you a vocabulary for choosing verbs intentionally, not randomly.</p>
+    </div>
+
+    <!-- 2: Bloom's ladder -->
+    <div class="primer-subsection">
+      <h4>2 — Bloom's Revised Taxonomy: the six levels, visually</h4>
+      <p>Bloom's classifies cognitive tasks into six levels, from simpler recall up to complex creation. The levels are hierarchical — higher levels generally build on lower ones — but that doesn't mean lower levels are unimportant. A well-designed course moves students up and down the ladder intentionally.</p>
+
+      <div class="bloom-ladder-header">
+        <span>Level</span>
+        <span>What students do</span>
+        <span>Computing verbs</span>
+      </div>
+      <div class="bloom-ladder">
+        <div class="bloom-rung" style="background:#f9f0e8;">
+          <div class="bloom-rung-level" style="color:#92400e;">① Remember</div>
+          <div class="bloom-rung-def">Recall facts, syntax, definitions</div>
+          <div class="bloom-rung-verbs">define, list, name, recall, label</div>
+        </div>
+        <div class="bloom-rung" style="background:#f0f5e8;">
+          <div class="bloom-rung-level" style="color:#3f6212;">② Understand</div>
+          <div class="bloom-rung-def">Explain concepts in own words</div>
+          <div class="bloom-rung-verbs">explain, describe, summarize, compare</div>
+        </div>
+        <div class="bloom-rung" style="background:#e8f0f8;">
+          <div class="bloom-rung-level" style="color:#1e3a5f;">③ Apply</div>
+          <div class="bloom-rung-def">Use knowledge in new situations</div>
+          <div class="bloom-rung-verbs">implement, execute, debug, write, use</div>
+        </div>
+        <div class="bloom-rung" style="background:#f0e8f8;">
+          <div class="bloom-rung-level" style="color:#4c1d95;">④ Analyze</div>
+          <div class="bloom-rung-def">Break down and examine relationships</div>
+          <div class="bloom-rung-verbs">trace, profile, deconstruct, benchmark</div>
+        </div>
+        <div class="bloom-rung" style="background:#f8e8e8;">
+          <div class="bloom-rung-level" style="color:#7f1d1d;">⑤ Evaluate</div>
+          <div class="bloom-rung-def">Judge, critique, justify decisions</div>
+          <div class="bloom-rung-verbs">evaluate, critique, defend, recommend</div>
+        </div>
+        <div class="bloom-rung" style="background:#e8f8f0;">
+          <div class="bloom-rung-level" style="color:#065f46;">⑥ Create</div>
+          <div class="bloom-rung-def">Produce something new and original</div>
+          <div class="bloom-rung-verbs">design, architect, build, prototype, invent</div>
+        </div>
+      </div>
+      <div class="bloom-order-label">① lower-order thinking &nbsp;———————→&nbsp; higher-order thinking ⑥</div>
+      <p style="margin-top:1rem;">Most traditional computing assessments cluster around levels ①–③. The article you're about to read argues that this leaves critical dimensions of learning — and students — underdeveloped.</p>
+    </div>
+
+    <!-- 3: AI integrity context -->
+    <div class="primer-subsection">
+      <h4>3 — AI and assessment integrity: what's actually at stake</h4>
+      <p>Generative AI tools like ChatGPT and GitHub Copilot can now produce code, written explanations, and analytical responses at a level that makes them viable substitutes for many traditional student assignments. This isn't speculation — it's a practical reality most computing faculty are already navigating.</p>
+      <p>The concern isn't primarily about cheating. It's about a more fundamental question: <strong>if a student can delegate a task entirely to AI and submit the result, did any learning happen?</strong> If the answer is no, the assignment may not be measuring what you think it's measuring.</p>
+
+      <div class="ai-context-box">
+        <p><strong>A useful mental model:</strong> think of AI as a very capable intern who never sleeps. Any task you could describe clearly in a prompt and verify by reading the output — that task is delegatable. The question for your course design is: which tasks genuinely require the student to have done the thinking, had the experience, or developed the judgment themselves?</p>
+        <p>This is exactly what Fink's taxonomy helps you see — and why the article ahead is relevant whether or not you've thought explicitly about AI before.</p>
+      </div>
+    </div>
+
+  </div><!-- end primer-body -->
+</div><!-- end primer-section -->
+
+<!-- Hero -->
+<div class="hero">
+  <div class="hero-series">Beyond Bloom's — A Series for Computing & STEM Faculty</div>
+  <h1>What <em>Fink's Taxonomy</em> Means for Computing Courses</h1>
+  <p class="subtitle">The design lens that explains why your best assignments work — and your weakest ones don't</p>
+  <div class="hero-meta">Akesha Horton &nbsp;·&nbsp; Indiana University Luddy School &nbsp;·&nbsp; 2026</div>
+</div>
+
+<!-- Article -->
+<article>
+
+  <p>If you've been in higher education for more than five minutes, you've encountered Bloom's Taxonomy. Remember, Apply, Analyze, Evaluate, Create — the cognitive hierarchy that tells you whether you're asking students to think deeply or just recall facts.</p>
+
+  <p>Bloom's is genuinely useful. But L. Dee Fink, in his 2003 book <em>Creating Significant Learning Experiences</em>, noticed something important: <strong>Bloom's only addresses one dimension of how humans learn.</strong> It tells you how cognitively demanding a task is. It tells you almost nothing about whether students will care about it, connect it to anything real, or know how to keep learning on their own after the course ends.</p>
+
+  <p>For computing and STEM faculty specifically, this gap is consequential. We spend enormous energy designing cognitively rigorous assessments — and then wonder why students who passed the exam still can't function in an internship, or why a technically brilliant student struggles in a team environment, or why a graduating senior freezes up when asked to learn a new framework independently.</p>
+
+  <div class="pull-quote">
+    <p>"Bloom's tells you how hard the thinking is. Fink's tells you whether it matters to the person doing the thinking."</p>
+  </div>
+
+  <h2>A Quick Primer: Bloom's Revised Taxonomy</h2>
+
+  <p>Originally developed in 1956 by Dr. Benjamin Bloom and updated in 2001 by Anderson and Krathwohl, Bloom's Revised Taxonomy classifies cognitive learning into six hierarchical levels:</p>
+
+  <ul class="styled-list">
+    <li><strong>Remembering</strong> — Recalling facts and basic concepts</li>
+    <li><strong>Understanding</strong> — Explaining ideas or concepts</li>
+    <li><strong>Applying</strong> — Using information in new situations</li>
+    <li><strong>Analyzing</strong> — Drawing connections among ideas</li>
+    <li><strong>Evaluating</strong> — Justifying a stand or decision</li>
+    <li><strong>Creating</strong> — Producing new or original work</li>
+  </ul>
+
+  <p>The taxonomy is instrumental for writing measurable learning outcomes and aligning assessments to the right cognitive level. The ACM Committee for Computing Education in Community Colleges (CCECC) has even extended the standard verb lists with computing-specific language — recognizing that verbs like "implement," "debug," and "deploy" don't map cleanly onto traditional Bloom's vocabulary.</p>
+
+  <p>But cognitive rigor alone isn't the full picture.</p>
+
+  <hr class="section-rule">
+
+  <h2>The Six Dimensions of Fink's Taxonomy</h2>
+
+  <p>Fink's taxonomy isn't a hierarchy — it's an <strong>interactive web</strong>. Every dimension strengthens the others. Here's what each one means in the context of a computing or STEM course:</p>
+
+  <table class="dim-table">
+    <thead>
+      <tr>
+        <th>Dimension</th>
+        <th>What it means</th>
+        <th>In a computing course…</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="dim-badge" style="background:#f0e6d3;color:#6b4c22">FK</span><br><span class="dim-name">Foundational Knowledge</span></td>
+        <td>Understanding & remembering key concepts, facts, principles</td>
+        <td>Data structures, algorithm analysis, language syntax</td>
+      </tr>
+      <tr>
+        <td><span class="dim-badge" style="background:#d3e6f0;color:#1b3a5a">AP</span><br><span class="dim-name">Application</span></td>
+        <td>Critical thinking, creative thinking, practical skills, managing projects</td>
+        <td>Implementing algorithms, debugging, system design</td>
+      </tr>
+      <tr>
+        <td><span class="dim-badge" style="background:#d3f0e6;color:#1b4a3a">IN</span><br><span class="dim-name">Integration</span></td>
+        <td>Connecting ideas across subjects, disciplines, and life contexts</td>
+        <td>Seeing how OS concepts relate to security; connecting theory to production code</td>
+      </tr>
+      <tr>
+        <td><span class="dim-badge" style="background:#f0d3e6;color:#5a1b40">HD</span><br><span class="dim-name">Human Dimension</span></td>
+        <td>Learning about oneself and others — identity, perspective, collaboration</td>
+        <td>Code review etiquette, equity in technical interviews, accessibility awareness</td>
+      </tr>
+      <tr>
+        <td><span class="dim-badge" style="background:#e6f0d3;color:#2a4a1e">CA</span><br><span class="dim-name">Caring</span></td>
+        <td>Developing new feelings, interests, and values — becoming invested</td>
+        <td>Caring about software quality, open-source ethics, end-user impact</td>
+      </tr>
+      <tr>
+        <td><span class="dim-badge" style="background:#f0d3d3;color:#5a1b1b">LL</span><br><span class="dim-name">Learning How to Learn</span></td>
+        <td>Metacognition, self-direction, inquiry skills — becoming a self-improving practitioner</td>
+        <td>Reading documentation, debugging mindset, knowing when to ask for help</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <hr class="section-rule">
+
+  <h2>Why This Matters Right Now</h2>
+
+  <p>Here's the uncomfortable truth about AI and Fink's taxonomy: <strong>generative AI is extraordinarily good at Foundational Knowledge.</strong> It can explain recursion, walk through quicksort, or generate syntactically correct code on demand. If your assessments primarily target FK, students don't need to engage — they can delegate.</p>
+
+  <p>But AI cannot learn to care about software quality on your student's behalf. It cannot develop their debugging mindset. It cannot give them the experience of genuinely connecting theory to a problem that matters to them personally. The upper dimensions of Fink's taxonomy — HD, CA, LL — are exactly where human learning is irreplaceable, and exactly where most computing assessments underinvest.</p>
+
+  <div class="audit-box">
+    <h3>⬡ The AI Audit</h3>
+    <p>For each of your major assessments, ask: <em>which Fink dimensions does this assignment actually require the student to engage?</em> If you only see FK and AP — and especially if you only see FK — you've found your highest-risk assignment for AI substitution.</p>
+  </div>
+
+  <hr class="section-rule">
+
+  <h2>Practical Examples: Fink in a CS Course</h2>
+
+  <h3>The Difference a Single Question Makes</h3>
+
+  <p>Consider a standard data structures assignment:</p>
+
+  <div class="example-box">
+    <div class="example-box-label">Before & After — Standard vs. upgraded prompt</div>
+    <div class="before">
+      <div class="label-sm">Original prompt</div>
+      "Implement a binary search tree with insert, delete, and search operations."
+      <div class="dim-tags" style="margin-top:0.75rem">
+        <span class="dim-tag" style="background:#f0e6d3;color:#6b4c22">FK — Foundational Knowledge</span>
+        <span class="dim-tag" style="background:#d3e6f0;color:#1b3a5a">AP — Application</span>
+      </div>
+      <div style="font-size:0.78rem;color:#991b1b;margin-top:0.5rem;font-style:italic">Misses IN, HD, CA, LL entirely. Almost entirely delegatable to AI.</div>
+    </div>
+    <div class="after">
+      <div class="label-sm">Add one question</div>
+      "Describe a real system you use daily that likely relies on a tree structure. How does your implementation compare to what you'd expect in production? What surprised you?"
+      <div class="dim-tags" style="margin-top:0.75rem">
+        <span class="dim-tag" style="background:#d3f0e6;color:#1b4a3a">IN — Integration</span>
+        <span class="dim-tag" style="background:#f0d3e6;color:#5a1b40">HD — Human Dimension</span>
+        <span class="dim-tag" style="background:#e6f0d3;color:#2a4a1e">CA — Caring</span>
+        <span class="dim-tag" style="background:#f0d3d3;color:#5a1b1b">LL — Learning How to Learn</span>
+      </div>
+      <div style="font-size:0.78rem;color:#166534;margin-top:0.5rem;font-style:italic">AI can generate plausible-sounding text — but the student still has to have had the experience.</div>
+    </div>
+  </div>
+
+  <h3>Caring in a Systems Course</h3>
+
+  <p>Caring doesn't mean students have to love your subject. Fink defines it as developing new interests, values, or feelings — including <strong>professional values</strong>. In a software engineering course, Caring might look like: Does this student give a damn about writing readable code? Do they think about the next person who will maintain their work? Are they developing a genuine stance on open-source licensing?</p>
+
+  <p>Those aren't soft skills. They're the difference between a developer and a professional.</p>
+
+  <h3>Learning How to Learn in Every Course</h3>
+
+  <p>The LL dimension is the most underrepresented in computing curricula and arguably the most important for career longevity. The half-life of a specific technology stack is measured in years; the ability to learn a new one independently is what sustains a career.</p>
+
+  <p>What does LL look like as an assessment? It might be a reflection on which resources a student used to solve a difficult problem and why. A post-mortem where students analyze their own debugging process. Or as simple as requiring students to document what they tried before asking for help — making their problem-solving process visible rather than just its output.</p>
+
+  <div class="pull-quote">
+    <p>"The goal isn't students who have learned your course. It's students who know how to keep learning after it ends."</p>
+  </div>
+
+  <h3>A Note on Integration</h3>
+
+  <p>Integration is the dimension most likely to shift how a student sees your discipline. It's the moment when a student realizes that the graph algorithms they learned in CS are why their GPS app works, or that the ethics discussion in their intro course wasn't an add-on but a preview of every technical decision they'll make professionally.</p>
+
+  <p>Building Integration into your assignments doesn't require a curriculum overhaul. It often requires one additional prompt: <em>"How does this connect to something outside this course?"</em> The specificity of the answer tells you more about understanding than any algorithmic implementation can.</p>
+
+  <hr class="section-rule">
+
+  <h2>Getting Started: The Fink Audit</h2>
+
+  <p>Before the next post, try this: for your next major assignment, map it against the six dimensions. Which dimensions does it genuinely require? Which are absent? Then ask: <strong>what's the minimum change that would add one missing dimension without increasing grading burden?</strong></p>
+
+  <div class="callout">
+    <div class="callout-label">Your design brief</div>
+    <p>Minimum change. Genuine dimension. No new burden. That constraint is where the most powerful assignment redesigns begin.</p>
+  </div>
+
+  <p>In the next post, we'll see how the <strong>SHARE technique</strong> operationalizes exactly this kind of targeted upgrade across five specific assignment components — making any computing assessment simultaneously more AI-resilient and more educationally valuable.</p>
+
+  <div class="next-post">
+    <div class="next-label">Next in the Series</div>
+    <p><strong>The SHARE Technique</strong> — Five specific components that make any assignment more AI-resilient and more educationally valuable simultaneously.</p>
+  </div>
+
+</article>
+
+<script>
+  function togglePrimer() {
+    const body = document.getElementById('primer-body');
+    const toggle = document.getElementById('primer-toggle');
+    const arrow = document.getElementById('primer-arrow');
+    const isOpen = body.classList.contains('open');
+    body.classList.toggle('open', !isOpen);
+    toggle.classList.toggle('open', !isOpen);
+  }
+
+  function openPrimer() {
+    const body = document.getElementById('primer-body');
+    const toggle = document.getElementById('primer-toggle');
+    body.classList.add('open');
+    toggle.classList.add('open');
+    document.getElementById('primer-toggle').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+</script>
+
+</body>
+</html>
