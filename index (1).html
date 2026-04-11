@@ -1,0 +1,1107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Taxonomy Verb Finder — Bloom's & Fink's for Computing</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #1a1a2e;
+    --paper: #faf8f3;
+    --warm: #f5f0e8;
+    --accent: #c84b31;
+    --accent2: #2d6a9f;
+    --accent3: #3a7d44;
+    --gold: #d4a017;
+    --muted: #7a7068;
+    --border: #ddd8ce;
+
+    /* Bloom levels */
+    --remember: #e8d5b7;
+    --understand: #d4e8c2;
+    --apply: #b7d4e8;
+    --analyze: #d4b7e8;
+    --evaluate: #e8c2b7;
+    --create: #b7e8d4;
+
+    /* Fink dimensions */
+    --fk: #f0e6d3;
+    --ap: #d3e6f0;
+    --in: #d3f0e6;
+    --hd: #f0d3e6;
+    --ca: #e6f0d3;
+    --ll: #f0d3d3;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--paper);
+    color: var(--ink);
+    min-height: 100vh;
+  }
+
+  /* Header */
+  header {
+    background: var(--ink);
+    color: var(--paper);
+    padding: 3rem 2rem 2.5rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  header::before {
+    content: '';
+    position: absolute;
+    top: -40px; right: -40px;
+    width: 280px; height: 280px;
+    border: 40px solid rgba(255,255,255,0.04);
+    border-radius: 50%;
+  }
+  header::after {
+    content: '';
+    position: absolute;
+    bottom: -60px; left: 60px;
+    width: 180px; height: 180px;
+    border: 30px solid rgba(255,255,255,0.03);
+    border-radius: 50%;
+  }
+
+  .header-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+  }
+
+  .header-tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 0.75rem;
+  }
+
+  header h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(2rem, 5vw, 3.2rem);
+    font-weight: 400;
+    line-height: 1.1;
+    margin-bottom: 0.75rem;
+  }
+
+  header h1 em {
+    font-style: italic;
+    color: var(--gold);
+  }
+
+  header p {
+    font-size: 1rem;
+    font-weight: 300;
+    color: rgba(250,248,243,0.7);
+    max-width: 560px;
+    line-height: 1.6;
+  }
+
+  /* Search bar */
+  .search-section {
+    background: var(--warm);
+    border-bottom: 1px solid var(--border);
+    padding: 1.5rem 2rem;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 12px rgba(26,26,46,0.06);
+  }
+
+  .search-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .search-wrap {
+    position: relative;
+    flex: 1;
+    min-width: 220px;
+  }
+
+  .search-wrap svg {
+    position: absolute;
+    left: 14px; top: 50%;
+    transform: translateY(-50%);
+    color: var(--muted);
+    pointer-events: none;
+  }
+
+  #search {
+    width: 100%;
+    padding: 0.75rem 1rem 0.75rem 2.75rem;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.95rem;
+    background: white;
+    color: var(--ink);
+    transition: border-color 0.2s, box-shadow 0.2s;
+    outline: none;
+  }
+
+  #search:focus {
+    border-color: var(--accent2);
+    box-shadow: 0 0 0 3px rgba(45,106,159,0.12);
+  }
+
+  .filter-group {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .filter-label {
+    font-size: 0.75rem;
+    font-family: 'DM Mono', monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  .filter-btn {
+    padding: 0.4rem 0.85rem;
+    border-radius: 20px;
+    border: 1.5px solid var(--border);
+    background: white;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.15s;
+    color: var(--ink);
+    font-weight: 500;
+  }
+
+  .filter-btn:hover { border-color: var(--ink); }
+  .filter-btn.active { background: var(--ink); color: white; border-color: var(--ink); }
+
+  .result-count {
+    font-size: 0.8rem;
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    white-space: nowrap;
+    margin-left: auto;
+  }
+
+  /* Main layout */
+  main {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 2rem;
+  }
+
+  /* Tabs */
+  .tabs {
+    display: flex;
+    gap: 0;
+    border-bottom: 2px solid var(--border);
+    margin-bottom: 2rem;
+  }
+
+  .tab-btn {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    background: none;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--muted);
+    cursor: pointer;
+    position: relative;
+    transition: color 0.2s;
+  }
+
+  .tab-btn.active { color: var(--ink); }
+  .tab-btn.active::after {
+    content: '';
+    position: absolute;
+    bottom: -2px; left: 0; right: 0;
+    height: 2px;
+    background: var(--accent);
+  }
+
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* Section headers */
+  .section-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.4rem;
+    font-weight: 400;
+    margin-bottom: 0.25rem;
+  }
+
+  .section-sub {
+    font-size: 0.85rem;
+    color: var(--muted);
+    margin-bottom: 1.5rem;
+    font-weight: 300;
+  }
+
+  /* Bloom's grid */
+  .bloom-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 1.25rem;
+    margin-bottom: 2rem;
+  }
+
+  .bloom-card {
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    transition: box-shadow 0.2s, transform 0.2s;
+  }
+
+  .bloom-card:hover {
+    box-shadow: 0 4px 20px rgba(26,26,46,0.1);
+    transform: translateY(-1px);
+  }
+
+  .bloom-card-header {
+    padding: 1rem 1.25rem 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .bloom-level-num {
+    font-family: 'DM Serif Display', serif;
+    font-size: 2rem;
+    font-weight: 400;
+    line-height: 1;
+    opacity: 0.35;
+  }
+
+  .bloom-card-meta h3 {
+    font-size: 1rem;
+    font-weight: 600;
+  }
+
+  .bloom-card-meta .bloom-def {
+    font-size: 0.78rem;
+    color: var(--muted);
+    margin-top: 0.1rem;
+  }
+
+  .bloom-card-body {
+    padding: 0 1.25rem 1.25rem;
+  }
+
+  .verb-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .verb-tag {
+    padding: 0.3rem 0.7rem;
+    border-radius: 6px;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: all 0.15s;
+    border: 1px solid transparent;
+    font-weight: 500;
+  }
+
+  .verb-tag:hover {
+    filter: brightness(0.9);
+    transform: scale(1.04);
+  }
+
+  .verb-tag.highlight {
+    outline: 2px solid var(--ink);
+    outline-offset: 1px;
+  }
+
+  .verb-tag.dim { opacity: 0.25; }
+
+  .computing-examples {
+    margin-top: 0.5rem;
+  }
+
+  .computing-examples-label {
+    font-size: 0.7rem;
+    font-family: 'DM Mono', monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    margin-bottom: 0.4rem;
+  }
+
+  .computing-examples p {
+    font-size: 0.8rem;
+    color: var(--ink);
+    font-style: italic;
+    line-height: 1.5;
+  }
+
+  /* Fink's table */
+  .fink-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.25rem;
+    margin-bottom: 2rem;
+  }
+
+  .fink-card {
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    transition: box-shadow 0.2s, transform 0.2s;
+  }
+
+  .fink-card:hover {
+    box-shadow: 0 4px 20px rgba(26,26,46,0.1);
+    transform: translateY(-1px);
+  }
+
+  .fink-card-header {
+    padding: 1rem 1.25rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .fink-badge {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    font-weight: 500;
+    padding: 0.3rem 0.5rem;
+    border-radius: 5px;
+    letter-spacing: 0.05em;
+    flex-shrink: 0;
+    margin-top: 0.15rem;
+  }
+
+  .fink-card-meta h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 0.2rem;
+  }
+
+  .fink-card-meta .fink-def {
+    font-size: 0.8rem;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+
+  .fink-card-body {
+    padding: 0 1.25rem 1.25rem;
+  }
+
+  .ai-risk {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.72rem;
+    font-family: 'DM Mono', monospace;
+    padding: 0.25rem 0.6rem;
+    border-radius: 20px;
+    margin-bottom: 0.75rem;
+  }
+
+  .ai-risk.low { background: #fee2e2; color: #991b1b; }
+  .ai-risk.medium { background: #fef3c7; color: #92400e; }
+  .ai-risk.high { background: #dcfce7; color: #166534; }
+
+  .fink-verbs-section .verb-tags { margin-top: 0.5rem; }
+
+  /* Combined view */
+  .matrix-section {
+    overflow-x: auto;
+  }
+
+  .matrix-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.82rem;
+  }
+
+  .matrix-table th {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 0.6rem 0.75rem;
+    text-align: left;
+    border-bottom: 2px solid var(--border);
+    white-space: nowrap;
+    position: sticky;
+    top: 0;
+    background: var(--paper);
+  }
+
+  .matrix-table td {
+    padding: 0.75rem;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+
+  .matrix-table tr:hover td { background: var(--warm); }
+
+  .matrix-verb {
+    font-family: 'DM Mono', monospace;
+    font-weight: 500;
+    font-size: 0.85rem;
+  }
+
+  .matrix-bloom-badge {
+    display: inline-block;
+    padding: 0.15rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-family: 'DM Mono', monospace;
+    font-weight: 500;
+  }
+
+  .matrix-fink-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+    margin-top: 0.3rem;
+  }
+
+  .matrix-fink-tag {
+    padding: 0.15rem 0.45rem;
+    border-radius: 4px;
+    font-size: 0.65rem;
+    font-family: 'DM Mono', monospace;
+  }
+
+  /* About section */
+  .about-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+  }
+
+  @media (max-width: 640px) {
+    .about-grid { grid-template-columns: 1fr; }
+  }
+
+  .about-box {
+    background: var(--warm);
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    padding: 1.5rem;
+  }
+
+  .about-box h3 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.1rem;
+    font-weight: 400;
+    margin-bottom: 0.5rem;
+  }
+
+  .about-box p, .about-box li {
+    font-size: 0.88rem;
+    line-height: 1.7;
+    color: #444;
+  }
+
+  .about-box ul { padding-left: 1.2rem; }
+  .about-box li { margin-bottom: 0.3rem; }
+
+  .callout {
+    background: var(--ink);
+    color: var(--paper);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin: 2rem 0;
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.15rem;
+    font-style: italic;
+    line-height: 1.6;
+    text-align: center;
+  }
+
+  .callout em { color: var(--gold); font-style: normal; }
+
+  /* No results */
+  .no-results {
+    text-align: center;
+    padding: 3rem;
+    color: var(--muted);
+    font-size: 0.95rem;
+    display: none;
+  }
+
+  /* Responsive */
+  @media (max-width: 600px) {
+    .search-inner { flex-direction: column; align-items: stretch; }
+    .result-count { margin-left: 0; }
+    main { padding: 1rem; }
+    header { padding: 2rem 1rem 1.75rem; }
+    .search-section { padding: 1rem; }
+    .bloom-grid, .fink-grid { grid-template-columns: 1fr; }
+  }
+
+  /* Animations */
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .bloom-card, .fink-card {
+    animation: fadeIn 0.3s ease both;
+  }
+
+  .bloom-card:nth-child(1) { animation-delay: 0.05s; }
+  .bloom-card:nth-child(2) { animation-delay: 0.10s; }
+  .bloom-card:nth-child(3) { animation-delay: 0.15s; }
+  .bloom-card:nth-child(4) { animation-delay: 0.20s; }
+  .bloom-card:nth-child(5) { animation-delay: 0.25s; }
+  .bloom-card:nth-child(6) { animation-delay: 0.30s; }
+
+  .hidden { display: none !important; }
+
+  footer {
+    text-align: center;
+    padding: 2rem;
+    font-size: 0.78rem;
+    color: var(--muted);
+    border-top: 1px solid var(--border);
+    margin-top: 3rem;
+    font-family: 'DM Mono', monospace;
+  }
+
+  /* Site nav */
+  .site-nav {
+    background: white;
+    border-bottom: 1px solid var(--border);
+    padding: 0 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 56px;
+    position: sticky;
+    top: 0;
+    z-index: 200;
+    box-shadow: 0 1px 6px rgba(26,26,46,0.05);
+  }
+  .site-nav-brand {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1rem;
+    color: var(--ink);
+    text-decoration: none;
+    font-weight: 400;
+    letter-spacing: -0.01em;
+  }
+  .site-nav-brand span { color: var(--gold); }
+  .site-nav-links {
+    display: flex;
+    gap: 0.25rem;
+    align-items: center;
+  }
+  .site-nav-link {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: var(--muted);
+    text-decoration: none;
+    padding: 0.4rem 0.85rem;
+    border-radius: 6px;
+    transition: all 0.15s;
+    border: 1.5px solid transparent;
+  }
+  .site-nav-link:hover { color: var(--ink); background: var(--warm); }
+  .site-nav-link.active {
+    color: var(--ink);
+    border-color: var(--border);
+    background: var(--warm);
+  }
+</style>
+</head>
+<body>
+
+<nav class="site-nav">
+  <a href="index.html" class="site-nav-brand">Computing Verb <span>Atlas</span></a>
+  <div class="site-nav-links">
+    <a href="index.html" class="site-nav-link active">🔍 Verb Finder</a>
+    <a href="beyond-blooms-finks-taxonomy.html" class="site-nav-link">📝 Blog: Beyond Bloom's</a>
+  </div>
+</nav>
+
+<header>
+  <div class="header-inner">
+    <div class="header-tag">Computing Education Resource</div>
+    <h1>Taxonomy Verb Finder<br><em>Bloom's + Fink's</em></h1>
+    <p>Search and explore action verbs for learning outcomes — mapped across both Bloom's Revised Taxonomy and Fink's Significant Learning dimensions for computing and STEM courses.</p>
+  </div>
+</header>
+
+<div class="search-section">
+  <div class="search-inner">
+    <div class="search-wrap">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input type="text" id="search" placeholder="Search verbs, e.g. "debug", "analyze", "design"…" autocomplete="off">
+    </div>
+    <div class="filter-group">
+      <span class="filter-label">Bloom's:</span>
+      <button class="filter-btn active" data-bloom="all">All</button>
+      <button class="filter-btn" data-bloom="Remember">Remember</button>
+      <button class="filter-btn" data-bloom="Understand">Understand</button>
+      <button class="filter-btn" data-bloom="Apply">Apply</button>
+      <button class="filter-btn" data-bloom="Analyze">Analyze</button>
+      <button class="filter-btn" data-bloom="Evaluate">Evaluate</button>
+      <button class="filter-btn" data-bloom="Create">Create</button>
+    </div>
+    <div class="filter-group">
+      <span class="filter-label">Fink:</span>
+      <button class="filter-btn active" data-fink="all">All</button>
+      <button class="filter-btn" data-fink="FK">FK</button>
+      <button class="filter-btn" data-fink="AP">AP</button>
+      <button class="filter-btn" data-fink="IN">IN</button>
+      <button class="filter-btn" data-fink="HD">HD</button>
+      <button class="filter-btn" data-fink="CA">CA</button>
+      <button class="filter-btn" data-fink="LL">LL</button>
+    </div>
+    <div class="result-count" id="result-count">— verbs</div>
+  </div>
+</div>
+
+<main>
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="blooms">Bloom's View</button>
+    <button class="tab-btn" data-tab="finks">Fink's View</button>
+    <button class="tab-btn" data-tab="matrix">Full Matrix</button>
+    <button class="tab-btn" data-tab="about">About</button>
+  </div>
+
+  <!-- BLOOM'S TAB -->
+  <div class="tab-panel active" id="tab-blooms">
+    <p class="section-sub">Verbs organized by Bloom's cognitive level. Each verb is tagged with corresponding Fink dimensions to show what types of learning it activates.</p>
+    <div class="bloom-grid" id="bloom-grid"></div>
+    <div class="no-results" id="bloom-no-results">No verbs match your search. Try different keywords or clear filters.</div>
+  </div>
+
+  <!-- FINK'S TAB -->
+  <div class="tab-panel" id="tab-finks">
+    <p class="section-sub">Verbs grouped by Fink's learning dimension. The AI-risk indicator shows how substitutable that dimension is by generative AI — higher AI risk = easier for AI to bypass.</p>
+    <div class="fink-grid" id="fink-grid"></div>
+    <div class="no-results" id="fink-no-results">No verbs match your search. Try different keywords or clear filters.</div>
+  </div>
+
+  <!-- MATRIX TAB -->
+  <div class="tab-panel" id="tab-matrix">
+    <p class="section-sub">All verbs in a scannable table — sort and filter across both taxonomies simultaneously.</p>
+    <div class="matrix-section">
+      <table class="matrix-table">
+        <thead>
+          <tr>
+            <th>Verb</th>
+            <th>Bloom's Level</th>
+            <th>Fink Dimensions</th>
+            <th>Computing Example</th>
+          </tr>
+        </thead>
+        <tbody id="matrix-body"></tbody>
+      </table>
+    </div>
+    <div class="no-results" id="matrix-no-results">No verbs match your search.</div>
+  </div>
+
+  <!-- ABOUT TAB -->
+  <div class="tab-panel" id="tab-about">
+    <div class="callout">
+      "Bloom's tells you <em>how hard</em> the thinking is. Fink's tells you <em>whether it matters</em> to the person doing the thinking."
+    </div>
+    <div class="about-grid">
+      <div class="about-box">
+        <h3>Bloom's Revised Taxonomy</h3>
+        <p>Originally developed in 1956 by Benjamin Bloom, revised in 2001 by Anderson & Krathwohl. A hierarchical cognitive framework describing six levels of intellectual engagement — from basic recall to complex creation. Essential for writing measurable learning outcomes.</p>
+        <ul style="margin-top:0.75rem">
+          <li><strong>Remember</strong> — Recall facts and concepts</li>
+          <li><strong>Understand</strong> — Explain ideas</li>
+          <li><strong>Apply</strong> — Use in new situations</li>
+          <li><strong>Analyze</strong> — Draw connections</li>
+          <li><strong>Evaluate</strong> — Justify decisions</li>
+          <li><strong>Create</strong> — Produce original work</li>
+        </ul>
+        <p style="margin-top:0.75rem">The ACM CCECC "Bloom's for Computing" initiative extended the standard verb list with computing-specific action verbs across all six levels.</p>
+      </div>
+      <div class="about-box">
+        <h3>Fink's Significant Learning</h3>
+        <p>L. Dee Fink's 2003 framework from <em>Creating Significant Learning Experiences</em>. Unlike Bloom's hierarchy, Fink's six dimensions form an interactive web — each strengthens the others. Addresses the full scope of human learning, not just cognition.</p>
+        <ul style="margin-top:0.75rem">
+          <li><strong>FK</strong> — Foundational Knowledge</li>
+          <li><strong>AP</strong> — Application</li>
+          <li><strong>IN</strong> — Integration</li>
+          <li><strong>HD</strong> — Human Dimension</li>
+          <li><strong>CA</strong> — Caring</li>
+          <li><strong>LL</strong> — Learning How to Learn</li>
+        </ul>
+        <p style="margin-top:0.75rem">In the AI era, HD, CA, and LL dimensions are most resistant to substitution — they require authentic human experience and reflection.</p>
+      </div>
+      <div class="about-box">
+        <h3>Why Both Together?</h3>
+        <p>Bloom's answers: <em>Is this task cognitively rigorous enough?</em> Fink's answers: <em>Will students actually care and grow?</em></p>
+        <p style="margin-top:0.5rem">Assessments that score high on Bloom's (Create level) but only touch FK and AP in Fink's terms are still vulnerable to AI substitution. The strongest assignments activate multiple Fink dimensions — especially HD, CA, and LL.</p>
+        <p style="margin-top:0.5rem"><strong>The AI Audit:</strong> For each major assignment, ask: which Fink dimensions does this genuinely require? If only FK and AP — you've found your highest-risk assignment.</p>
+      </div>
+      <div class="about-box">
+        <h3>How to Use This Tool</h3>
+        <ul>
+          <li>Search for a verb you're already using to see what it activates</li>
+          <li>Filter by Bloom's level to find alternatives at the same cognitive depth</li>
+          <li>Filter by Fink dimension to strengthen a specific type of learning</li>
+          <li>Use the Matrix view to scan all verbs at once</li>
+          <li>Aim for assignments that engage at least 3–4 Fink dimensions</li>
+        </ul>
+        <p style="margin-top:0.75rem">Based on the ACM CCECC "Bloom's for Computing" draft report and Fink's <em>Creating Significant Learning Experiences</em> (2003).</p>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer>
+  Built for computing and STEM educators &nbsp;·&nbsp; Bloom's + Fink's Taxonomy Verb Finder &nbsp;·&nbsp; Based on ACM CCECC "Bloom's for Computing" & Fink (2003)
+</footer>
+
+<script>
+// =============================================
+// DATA
+// =============================================
+const bloomColors = {
+  Remember: { bg: '#e8d5b7', text: '#5a3e1b', border: '#d4b88a' },
+  Understand: { bg: '#d4e8c2', text: '#2a4a1e', border: '#afd48a' },
+  Apply: { bg: '#b7d4e8', text: '#1b3a5a', border: '#8ab8d4' },
+  Analyze: { bg: '#d4b7e8', text: '#3a1b5a', border: '#b88ad4' },
+  Evaluate: { bg: '#e8c2b7', text: '#5a2a1b', border: '#d4988a' },
+  Create: { bg: '#b7e8d4', text: '#1b4a3a', border: '#8ad4b8' },
+};
+
+const finkColors = {
+  FK: { bg: '#f0e6d3', text: '#6b4c22', border: '#d4b88a' },
+  AP: { bg: '#d3e6f0', text: '#1b3a5a', border: '#8ab8d4' },
+  IN: { bg: '#d3f0e6', text: '#1b4a3a', border: '#8ad4b8' },
+  HD: { bg: '#f0d3e6', text: '#5a1b40', border: '#d48ab8' },
+  CA: { bg: '#e6f0d3', text: '#2a4a1e', border: '#afd48a' },
+  LL: { bg: '#f0d3d3', text: '#5a1b1b', border: '#d48a8a' },
+};
+
+const finkMeta = {
+  FK: { name: 'Foundational Knowledge', def: 'Understanding & remembering key concepts, facts, principles', aiRisk: 'low', aiLabel: '⚠ High AI risk' },
+  AP: { name: 'Application', def: 'Critical thinking, creative thinking, practical skills, managing projects', aiRisk: 'medium', aiLabel: '◑ Moderate AI risk' },
+  IN: { name: 'Integration', def: 'Connecting ideas across subjects, disciplines, and life contexts', aiRisk: 'medium', aiLabel: '◑ Moderate AI risk' },
+  HD: { name: 'Human Dimension', def: 'Learning about oneself and others — identity, perspective, collaboration', aiRisk: 'high', aiLabel: '✓ AI-resilient potential*' },
+  CA: { name: 'Caring', def: 'Developing new feelings, interests, and values — becoming invested', aiRisk: 'high', aiLabel: '✓ AI-resilient potential*' },
+  LL: { name: 'Learning How to Learn', def: 'Metacognition, self-direction, inquiry skills — becoming a self-improving practitioner', aiRisk: 'high', aiLabel: '✓ AI-resilient potential*' },
+};
+
+// Verb data: bloom level, fink dimensions, computing example, definition
+const VERBS = [
+  // REMEMBER
+  { verb: 'Define', bloom: 'Remember', fink: ['FK'], def: 'State the meaning of a term precisely', example: 'Define what a stack overflow is in a specific language context' },
+  { verb: 'List', bloom: 'Remember', fink: ['FK'], def: 'Enumerate items without explanation', example: 'List the sorting algorithms covered this semester' },
+  { verb: 'Recall', bloom: 'Remember', fink: ['FK'], def: 'Retrieve information from memory', example: 'Recall the time complexity of common data structures' },
+  { verb: 'Name', bloom: 'Remember', fink: ['FK'], def: 'Identify by specific designation', example: 'Name the layers of the OSI model' },
+  { verb: 'State', bloom: 'Remember', fink: ['FK'], def: 'Express in words precisely', example: 'State the invariant of a binary search tree' },
+  { verb: 'Identify', bloom: 'Remember', fink: ['FK', 'AP'], def: 'Recognize or locate something', example: 'Identify race conditions in provided code snippets' },
+  { verb: 'Label', bloom: 'Remember', fink: ['FK'], def: 'Attach a name or tag to an element', example: 'Label the components of a system architecture diagram' },
+  { verb: 'Reproduce', bloom: 'Remember', fink: ['FK', 'AP'], def: 'Replicate without modification', example: 'Reproduce a basic linked list implementation from memory' },
+  { verb: 'Recognize', bloom: 'Remember', fink: ['FK', 'AP'], def: 'Identify something previously encountered', example: 'Recognize common anti-patterns in code review' },
+  { verb: 'Retrieve', bloom: 'Remember', fink: ['FK'], def: 'Access stored information', example: 'Retrieve relevant API documentation for a given task' },
+
+  // UNDERSTAND
+  { verb: 'Explain', bloom: 'Understand', fink: ['FK', 'IN'], def: 'Make an idea clear using own words', example: 'Explain how garbage collection works to a non-technical teammate' },
+  { verb: 'Summarize', bloom: 'Understand', fink: ['FK', 'IN'], def: 'Condense key points concisely', example: 'Summarize the trade-offs of a proposed system design' },
+  { verb: 'Paraphrase', bloom: 'Understand', fink: ['FK', 'HD'], def: 'Restate in different words', example: 'Paraphrase a technical specification for a client audience' },
+  { verb: 'Classify', bloom: 'Understand', fink: ['FK', 'AP'], def: 'Organize into categories or groups', example: 'Classify software bugs by type and severity' },
+  { verb: 'Compare', bloom: 'Understand', fink: ['FK', 'IN', 'AP'], def: 'Identify similarities and differences', example: 'Compare relational and document database models for a use case' },
+  { verb: 'Illustrate', bloom: 'Understand', fink: ['FK', 'IN'], def: 'Clarify by providing examples or diagrams', example: 'Illustrate memory allocation with a diagram during a code walkthrough' },
+  { verb: 'Interpret', bloom: 'Understand', fink: ['FK', 'IN', 'HD'], def: 'Translate or decode meaning', example: 'Interpret an unfamiliar codebase and describe its purpose' },
+  { verb: 'Describe', bloom: 'Understand', fink: ['FK', 'IN'], def: 'Give detailed characteristics', example: 'Describe the behavior of an asynchronous function under load' },
+  { verb: 'Distinguish', bloom: 'Understand', fink: ['FK', 'AP'], def: 'Differentiate between related concepts', example: 'Distinguish between concurrency and parallelism' },
+  { verb: 'Predict', bloom: 'Understand', fink: ['FK', 'AP', 'LL'], def: 'Forecast an outcome based on understanding', example: 'Predict output of a program with pointer aliasing' },
+
+  // APPLY
+  { verb: 'Implement', bloom: 'Apply', fink: ['AP', 'FK'], def: 'Build a working version of a concept', example: 'Implement a REST API endpoint with proper error handling' },
+  { verb: 'Execute', bloom: 'Apply', fink: ['AP'], def: 'Run or carry out a procedure', example: 'Execute a suite of unit tests and interpret results' },
+  { verb: 'Debug', bloom: 'Apply', fink: ['AP', 'LL'], def: 'Locate and fix defects in code', example: 'Debug a race condition in a concurrent program' },
+  { verb: 'Use', bloom: 'Apply', fink: ['AP', 'FK'], def: 'Employ tools or techniques appropriately', example: 'Use version control branching strategies on a team project' },
+  { verb: 'Solve', bloom: 'Apply', fink: ['AP', 'IN'], def: 'Find a solution to a problem', example: 'Solve a dynamic programming problem with memoization' },
+  { verb: 'Demonstrate', bloom: 'Apply', fink: ['AP', 'HD'], def: 'Show or prove by example', example: 'Demonstrate a feature in a live code review session' },
+  { verb: 'Compute', bloom: 'Apply', fink: ['AP', 'FK'], def: 'Calculate or process data', example: 'Compute time complexity for a recursive algorithm' },
+  { verb: 'Construct', bloom: 'Apply', fink: ['AP', 'IN'], def: 'Build by combining components', example: 'Construct a CI/CD pipeline for an existing project' },
+  { verb: 'Configure', bloom: 'Apply', fink: ['AP', 'LL'], def: 'Set up a system for a specific purpose', example: 'Configure authentication middleware for a web application' },
+  { verb: 'Deploy', bloom: 'Apply', fink: ['AP', 'IN', 'CA'], def: 'Release a system to production', example: 'Deploy a containerized app with monitoring and rollback' },
+  { verb: 'Modify', bloom: 'Apply', fink: ['AP', 'LL'], def: 'Alter existing code or system', example: 'Modify legacy code to meet new accessibility requirements' },
+  { verb: 'Write', bloom: 'Apply', fink: ['AP', 'FK'], def: 'Produce code or documentation', example: 'Write clear API documentation for a public endpoint' },
+
+  // ANALYZE
+  { verb: 'Analyze', bloom: 'Analyze', fink: ['AP', 'IN', 'LL'], def: 'Break into parts and examine relationships', example: 'Analyze a system failure post-mortem for root causes' },
+  { verb: 'Differentiate', bloom: 'Analyze', fink: ['FK', 'AP', 'IN'], def: 'Distinguish between competing options', example: 'Differentiate microservices vs monolith for a given scale requirement' },
+  { verb: 'Examine', bloom: 'Analyze', fink: ['AP', 'IN'], def: 'Investigate carefully', example: 'Examine query execution plans for performance bottlenecks' },
+  { verb: 'Deconstruct', bloom: 'Analyze', fink: ['AP', 'IN', 'LL'], def: 'Break apart to understand structure', example: 'Deconstruct a complex algorithm into understandable sub-steps' },
+  { verb: 'Trace', bloom: 'Analyze', fink: ['AP', 'FK', 'LL'], def: 'Follow execution or logic step-by-step', example: 'Trace through a recursive call stack manually' },
+  { verb: 'Infer', bloom: 'Analyze', fink: ['AP', 'IN', 'LL'], def: 'Derive conclusions from evidence', example: 'Infer the original design intent from undocumented code' },
+  { verb: 'Profile', bloom: 'Analyze', fink: ['AP', 'CA', 'LL'], def: 'Measure performance characteristics', example: 'Profile a Python script to identify memory hotspots' },
+  { verb: 'Diagram', bloom: 'Analyze', fink: ['IN', 'AP', 'HD'], def: 'Represent relationships visually', example: 'Diagram the data flow in a distributed system' },
+  { verb: 'Attribute', bloom: 'Analyze', fink: ['IN', 'CA'], def: 'Identify the source or cause', example: 'Attribute a security vulnerability to an architectural decision' },
+  { verb: 'Benchmark', bloom: 'Analyze', fink: ['AP', 'IN', 'LL'], def: 'Measure against a standard', example: 'Benchmark two sorting implementations across dataset sizes' },
+
+  // EVALUATE
+  { verb: 'Evaluate', bloom: 'Evaluate', fink: ['AP', 'IN', 'CA', 'LL'], def: 'Make judgments based on criteria', example: 'Evaluate a peer\'s pull request against code quality standards' },
+  { verb: 'Critique', bloom: 'Evaluate', fink: ['AP', 'IN', 'HD', 'CA'], def: 'Provide constructive critical analysis', example: 'Critique a proposed architecture for scalability and maintainability' },
+  { verb: 'Justify', bloom: 'Evaluate', fink: ['AP', 'CA', 'IN'], def: 'Support a decision with reasoning', example: 'Justify a technology stack choice for a client project' },
+  { verb: 'Assess', bloom: 'Evaluate', fink: ['AP', 'IN', 'LL'], def: 'Determine the value or quality of something', example: 'Assess technical debt in a codebase before a major refactor' },
+  { verb: 'Judge', bloom: 'Evaluate', fink: ['AP', 'CA', 'HD'], def: 'Form an opinion based on evidence', example: 'Judge the appropriateness of an AI tool for a given task' },
+  { verb: 'Defend', bloom: 'Evaluate', fink: ['AP', 'CA', 'HD', 'IN'], def: 'Argue for a position under questioning', example: 'Defend your algorithmic approach during a technical interview' },
+  { verb: 'Recommend', bloom: 'Evaluate', fink: ['AP', 'IN', 'CA', 'HD'], def: 'Advise a course of action', example: 'Recommend an access control strategy to stakeholders' },
+  { verb: 'Prioritize', bloom: 'Evaluate', fink: ['AP', 'IN', 'CA'], def: 'Rank by importance or urgency', example: 'Prioritize a bug backlog by user impact and severity' },
+  { verb: 'Reflect', bloom: 'Evaluate', fink: ['HD', 'CA', 'LL'], def: 'Think deeply about one\'s own learning or practice', example: 'Reflect on your debugging process and what you would do differently' },
+  { verb: 'Argue', bloom: 'Evaluate', fink: ['AP', 'IN', 'CA'], def: 'Present a reasoned case', example: 'Argue for or against a proposed API breaking change' },
+
+  // CREATE
+  { verb: 'Design', bloom: 'Create', fink: ['AP', 'IN', 'CA', 'LL'], def: 'Plan and create a new system or solution', example: 'Design a data model for a healthcare record system' },
+  { verb: 'Build', bloom: 'Create', fink: ['AP', 'IN', 'CA'], def: 'Construct something new from components', example: 'Build a full-stack application serving real users' },
+  { verb: 'Develop', bloom: 'Create', fink: ['AP', 'IN', 'CA', 'LL'], def: 'Create and refine over time', example: 'Develop a testing strategy for a safety-critical system' },
+  { verb: 'Compose', bloom: 'Create', fink: ['AP', 'IN', 'CA'], def: 'Put together elements into a unified whole', example: 'Compose a technical spec from requirements and constraints' },
+  { verb: 'Formulate', bloom: 'Create', fink: ['AP', 'IN', 'LL'], def: 'Systematically develop a plan or theory', example: 'Formulate a research question from observed system behavior' },
+  { verb: 'Produce', bloom: 'Create', fink: ['AP', 'CA'], def: 'Generate a tangible output', example: 'Produce a polished open-source contribution with documentation' },
+  { verb: 'Architect', bloom: 'Create', fink: ['AP', 'IN', 'CA', 'HD'], def: 'Define high-level system structure', example: 'Architect a scalable event-driven system for a real use case' },
+  { verb: 'Invent', bloom: 'Create', fink: ['AP', 'CA', 'IN', 'LL'], def: 'Create something genuinely novel', example: 'Invent a heuristic for a domain-specific optimization problem' },
+  { verb: 'Propose', bloom: 'Create', fink: ['AP', 'IN', 'CA', 'HD'], def: 'Put forward a new idea for consideration', example: 'Propose an improvement to an existing open-source library' },
+  { verb: 'Prototype', bloom: 'Create', fink: ['AP', 'IN', 'CA', 'LL'], def: 'Build an early working model', example: 'Prototype an accessible UI component and test with real users' },
+];
+
+// =============================================
+// STATE
+// =============================================
+let activeBloom = 'all';
+let activeFink = 'all';
+let searchQuery = '';
+
+function getFilteredVerbs() {
+  return VERBS.filter(v => {
+    const matchBloom = activeBloom === 'all' || v.bloom === activeBloom;
+    const matchFink = activeFink === 'all' || v.fink.includes(activeFink);
+    const q = searchQuery.toLowerCase();
+    const matchSearch = !q || v.verb.toLowerCase().includes(q)
+      || v.def.toLowerCase().includes(q)
+      || v.example.toLowerCase().includes(q)
+      || v.bloom.toLowerCase().includes(q)
+      || v.fink.some(f => f.toLowerCase().includes(q));
+    return matchBloom && matchFink && matchSearch;
+  });
+}
+
+// =============================================
+// RENDER BLOOM'S VIEW
+// =============================================
+const bloomOrder = ['Remember', 'Understand', 'Apply', 'Analyze', 'Evaluate', 'Create'];
+const bloomDefs = {
+  Remember: 'Recalling facts and basic concepts',
+  Understand: 'Explaining ideas or concepts',
+  Apply: 'Using information in new situations',
+  Analyze: 'Drawing connections among ideas',
+  Evaluate: 'Justifying a stand or decision',
+  Create: 'Producing new or original work',
+};
+
+function renderBlooms(filtered) {
+  const grid = document.getElementById('bloom-grid');
+  const noResults = document.getElementById('bloom-no-results');
+  grid.innerHTML = '';
+  let totalShown = 0;
+
+  bloomOrder.forEach((level, idx) => {
+    const levelVerbs = filtered.filter(v => v.bloom === level);
+    if (levelVerbs.length === 0) return;
+    totalShown += levelVerbs.length;
+
+    const c = bloomColors[level];
+    const card = document.createElement('div');
+    card.className = 'bloom-card';
+    card.style.borderColor = c.border;
+
+    card.innerHTML = `
+      <div class="bloom-card-header" style="background:${c.bg}">
+        <div class="bloom-level-num">${idx + 1}</div>
+        <div class="bloom-card-meta">
+          <h3>${level}</h3>
+          <div class="bloom-def">${bloomDefs[level]}</div>
+        </div>
+      </div>
+      <div class="bloom-card-body">
+        <div class="verb-tags">
+          ${levelVerbs.map(v => `
+            <span class="verb-tag" style="background:${c.bg};color:${c.text};border-color:${c.border}"
+              title="${v.def}">${v.verb}</span>
+          `).join('')}
+        </div>
+        <div class="computing-examples">
+          <div class="computing-examples-label">Computing examples</div>
+          <p>${levelVerbs.slice(0, 2).map(v => `<strong>${v.verb}:</strong> ${v.example}`).join('<br>')}</p>
+        </div>
+        <div class="verb-tags" style="margin-top:0.75rem">
+          ${[...new Set(levelVerbs.flatMap(v => v.fink))].map(f => {
+            const fc = finkColors[f];
+            return `<span class="verb-tag" style="background:${fc.bg};color:${fc.text};border-color:${fc.border}">${finkMeta[f].name.split(' ').slice(0,1)[0] === 'Foundational' ? 'Foundational Knowledge' : finkMeta[f].name}</span>`;
+          }).join('')}
+        </div>
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+
+  noResults.style.display = totalShown === 0 ? 'block' : 'none';
+  return totalShown;
+}
+
+// =============================================
+// RENDER FINK'S VIEW
+// =============================================
+const finkOrder = ['FK', 'AP', 'IN', 'HD', 'CA', 'LL'];
+
+function renderFinks(filtered) {
+  const grid = document.getElementById('fink-grid');
+  const noResults = document.getElementById('fink-no-results');
+  grid.innerHTML = '';
+  let totalShown = 0;
+
+  finkOrder.forEach(dim => {
+    const dimVerbs = filtered.filter(v => v.fink.includes(dim));
+    if (dimVerbs.length === 0) return;
+    totalShown += dimVerbs.length;
+
+    const meta = finkMeta[dim];
+    const fc = finkColors[dim];
+
+    const card = document.createElement('div');
+    card.className = 'fink-card';
+    card.style.borderColor = fc.border;
+
+    card.innerHTML = `
+      <div class="fink-card-header" style="background:${fc.bg}">
+        <span class="fink-badge" style="background:${fc.text};color:${fc.bg}">${dim}</span>
+        <div class="fink-card-meta">
+          <h3>${meta.name}</h3>
+          <div class="fink-def">${meta.def}</div>
+        </div>
+      </div>
+      <div class="fink-card-body">
+        <span class="ai-risk ${meta.aiRisk}">${meta.aiLabel}</span>
+        <div class="fink-verbs-section">
+          <div class="computing-examples-label">Verbs that activate this dimension</div>
+          <div class="verb-tags">
+            ${dimVerbs.map(v => {
+              const bc = bloomColors[v.bloom];
+              return `<span class="verb-tag" style="background:${bc.bg};color:${bc.text};border-color:${bc.border}" title="${v.bloom}: ${v.def}">${v.verb}</span>`;
+            }).join('')}
+          </div>
+        </div>
+        <div class="computing-examples" style="margin-top:0.75rem">
+          <div class="computing-examples-label">Sample activities</div>
+          <p>${dimVerbs.slice(0, 2).map(v => `<strong>${v.verb}:</strong> ${v.example}`).join('<br>')}</p>
+        </div>
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+
+  noResults.style.display = totalShown === 0 ? 'block' : 'none';
+  return totalShown;
+}
+
+// =============================================
+// RENDER MATRIX
+// =============================================
+function renderMatrix(filtered) {
+  const tbody = document.getElementById('matrix-body');
+  const noResults = document.getElementById('matrix-no-results');
+  tbody.innerHTML = '';
+
+  filtered.forEach(v => {
+    const bc = bloomColors[v.bloom];
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><span class="matrix-verb">${v.verb}</span><br><span style="font-size:0.75rem;color:var(--muted)">${v.def}</span></td>
+      <td><span class="matrix-bloom-badge" style="background:${bc.bg};color:${bc.text}">${v.bloom}</span></td>
+      <td>
+        <div class="matrix-fink-tags">
+          ${v.fink.map(f => {
+            const fc = finkColors[f];
+            return `<span class="matrix-fink-tag" style="background:${fc.bg};color:${fc.text}">${f}</span>`;
+          }).join('')}
+        </div>
+      </td>
+      <td style="font-size:0.8rem;color:var(--muted);font-style:italic">${v.example}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  noResults.style.display = filtered.length === 0 ? 'block' : 'none';
+  return filtered.length;
+}
+
+// =============================================
+// MAIN UPDATE
+// =============================================
+function updateAll() {
+  const filtered = getFilteredVerbs();
+  const b = renderBlooms(filtered);
+  renderFinks(filtered);
+  renderMatrix(filtered);
+  document.getElementById('result-count').textContent = `${filtered.length} verb${filtered.length !== 1 ? 's' : ''}`;
+}
+
+// =============================================
+// EVENT LISTENERS
+// =============================================
+document.getElementById('search').addEventListener('input', e => {
+  searchQuery = e.target.value;
+  updateAll();
+});
+
+document.querySelectorAll('[data-bloom]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('[data-bloom]').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    activeBloom = btn.dataset.bloom;
+    updateAll();
+  });
+});
+
+document.querySelectorAll('[data-fink]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('[data-fink]').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    activeFink = btn.dataset.fink;
+    updateAll();
+  });
+});
+
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+  });
+});
+
+// Init
+updateAll();
+</script>
+</body>
+</html>
